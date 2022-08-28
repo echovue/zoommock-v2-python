@@ -1,32 +1,26 @@
-import requests
-from flask import Flask, jsonify, request, send_file
-from registrants import RegistrantClass
-from participants import ParticipantClass
+from flask import Flask, jsonify, request, send_file, abort
+from meetings import get_meetings
+from metrics import get_metrics
+from credentials import token
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
-zoomUrl = "http://localhost:8080"
-# zoomUrl = 'https://api.zoom.us/v2'
-registrants = RegistrantClass()
-participants = ParticipantClass()
+
+@app.route('/meetings/<string:meeting_id>/<string:meetings_type>', methods=['GET'])
+def meeting_registrants(meeting_id, meetings_type):
+    if request.headers['Authorization'] != 'Bearer ' + token:
+        abort(403)
+    return get_meetings(meetings_type, meeting_id)
 
 
-@app.route('/myMeeting', methods=['GET'])
-def meeting():
-    if 'id' in request.args:
-        meetingid = str(request.args['id'])
-    else:
-        return "Error: No meeting id provided."
-
-    registered = registrants.get_registrant_count(zoomUrl, meetingid)
-    participating = participants.get_participant_count(zoomUrl, meetingid)
-
-    return '<h1>My Meeting</h1>' + \
-            '<h3>Registered: ' + registered + '</h3>' + \
-            '<h3>Participating: ' + participating + '</h3>'
+@app.route("/metrics/<string:metrics_type>/<string:meeting_id>/<string:metrics_subtype>", methods=['GET'])
+def metrics(metrics_type, meeting_id, metrics_subtype):
+    if request.headers['Authorization'] != 'Bearer ' + token:
+        abort(403)
+    return get_metrics(metrics_type, metrics_subtype, meeting_id)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    app.run(port=8000)
+    app.run(port=8080)
