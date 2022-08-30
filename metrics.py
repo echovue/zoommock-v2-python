@@ -1,4 +1,4 @@
-from meetings import get_test_users
+from testdata import get_test_users
 
 num_participants = 6
 
